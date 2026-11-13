@@ -15,20 +15,15 @@
             message.style.color = "blue";
             message.innerText = "Test de communication en cours...";
 
-            const url = "https://sqcjycoddjbtvcgtdcaz.supabase.co/rest/v1/agents?select=*";
             const key = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t";
+            // On met la clé directement dans le lien pour éviter le blocage
+            const url = "https://sqcjycoddjbtvcgtdcaz.supabase.co/rest/v1/agents?select=*&apikey=" + key;
 
             try {
-                // On utilise fetch directement
                 const reponse = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': key,
-                        'Authorization': 'Bearer ' + key
-                    }
+                    method: 'GET'
                 });
 
-                // Si le serveur répond, on lit le message
                 const donnees = await reponse.json();
                 
                 if (reponse.ok) {
@@ -36,12 +31,13 @@
                     message.innerText = "Victoire ! Connexion réussie. L'API répond.";
                 } else {
                     message.style.color = "red";
-                    message.innerText = "Le serveur a répondu, mais avec une erreur (C'est normal, c'est le vigile) : " + JSON.stringify(donnees);
+                    // Si c'est une erreur 401/403, le vigile RLS fait son travail !
+                    message.innerText = "Le serveur a répondu (Code " + reponse.status + ") : " + JSON.stringify(donnees);
                 }
                 
             } catch (erreur) {
                 message.style.color = "red";
-                message.innerText = "Échec de communication. Ton navigateur bloque l'accès à Supabase. Erreur : " + erreur.message;
+                message.innerText = "Échec de communication. Erreur : " + erreur.message;
             }
         }
     </script>
