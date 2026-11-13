@@ -5,7 +5,36 @@
     <title>PWA Dépannage CIE</title>
 </head>
 <body>
-    <h1>Bonjour l'équipe Dépannage !</h1>
-    <p>La PWA est en cours de construction.</p>
+    <h1>PWA Dépannage CIE</h1>
+    <p id="message">Connexion à la base de données en cours...</p>
+    <button onclick="chargerAgents()">Tester la connexion</button>
+
+    <!-- Le code qui permet de parler à Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 👇 REMPLACE LES GUILLEMETS PAR TES INFOS
+        const SUPABASE_URL = "https://sqcjycoddjbtvcgtdcaz.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t"; // Celle qui commence par sb_publishable...
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function chargerAgents() {
+            const message = document.getElementById("message");
+            message.innerText = "Chargement...";
+
+            // On demande à la base de données la liste des agents
+            const { data, error } = await supabase.from('agents').select('*');
+
+            if (error) {
+                message.innerText = "Erreur : " + error.message;
+            } else {
+                if (data.length === 0) {
+                    message.innerText = "Connexion réussie ! La table est vide pour l'instant.";
+                } else {
+                    message.innerText = "Il y a " + data.length + " agent(s) enregistré(s).";
+                }
+            }
+        }
+    </script>
 </body>
 </html>
