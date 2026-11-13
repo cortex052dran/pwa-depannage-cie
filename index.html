@@ -6,33 +6,53 @@
 </head>
 <body>
     <h1>PWA Dépannage CIE</h1>
-    <p id="message">Connexion à la base de données en cours...</p>
+    <p id="message" style="font-weight: bold; color: blue;">En attente du clic...</p>
     <button onclick="chargerAgents()">Tester la connexion</button>
 
-    <!-- Le code qui permet de parler à Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // 👇 REMPLACE LES GUILLEMETS PAR TES INFOS
         const SUPABASE_URL = "https://sqcjycoddjbtvcgtdcaz.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t"; // Celle qui commence par sb_publishable...
+        // 👇 REMPLACE PAR TA CLÉ PUBLIQUE (garde bien les guillemets)
+        const SUPABASE_KEY = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t"; 
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabaseClient = null;
+
+        // On essaie de nous connecter à Supabase
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (erreur) {
+            document.getElementById("message").style.color = "red";
+            document.getElementById("message").innerText = "Erreur d'initialisation : " + erreur.message;
+        }
 
         async function chargerAgents() {
             const message = document.getElementById("message");
+            message.style.color = "blue";
             message.innerText = "Chargement...";
 
-            // On demande à la base de données la liste des agents
-            const { data, error } = await supabase.from('agents').select('*');
+            if (!supabaseClient) {
+                message.style.color = "red";
+                message.innerText = "Erreur : Les clés Supabase sont mal configurées.";
+                return;
+            }
 
-            if (error) {
-                message.innerText = "Erreur : " + error.message;
-            } else {
-                if (data.length === 0) {
-                    message.innerText = "Connexion réussie ! La table est vide pour l'instant.";
+            try {
+                const { data, error } = await supabaseClient.from('agents').select('*');
+
+                if (error) {
+                    message.style.color = "red";
+                    message.innerText = "Erreur (Vigile RLS) : " + error.message;
                 } else {
-                    message.innerText = "Il y a " + data.length + " agent(s) enregistré(s).";
+                    message.style.color = "green";
+                    if (data.length === 0) {
+                        message.innerText = "Succès ! La connexion fonctionne, la table est vide.";
+                    } else {
+                        message.innerText = "Succès ! Il y a " + data.length + " agent(s).";
+                    }
                 }
+            } catch (e) {
+                message.style.color = "red";
+                message.innerText = "Erreur inattendue : " + e.message;
             }
         }
     </script>
