@@ -7,51 +7,41 @@
 <body>
     <h1>PWA Dépannage CIE</h1>
     <p id="message" style="font-weight: bold; color: blue;">En attente du clic...</p>
-    <button onclick="chargerAgents()">Tester la connexion</button>
+    <button onclick="testerConnexionDirecte()">Tester la connexion</button>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // L'adresse est maintenant PARFAITE (avec .supabase.co)
-        const SUPABASE_URL = "https://sqcjycoddjbtvcgtdcaz.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t"; 
-
-        let supabaseClient = null;
-
-        try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (erreur) {
-            document.getElementById("message").style.color = "red";
-            document.getElementById("message").innerText = "Erreur d'initialisation : " + erreur.message;
-        }
-
-        async function chargerAgents() {
+        async function testerConnexionDirecte() {
             const message = document.getElementById("message");
             message.style.color = "blue";
-            message.innerText = "Chargement...";
+            message.innerText = "Test de communication en cours...";
 
-            if (!supabaseClient) {
-                message.style.color = "red";
-                message.innerText = "Erreur : Les clés Supabase sont mal configurées.";
-                return;
-            }
+            const url = "https://sqcjycoddjbtvcgtdcaz.supabase.co/rest/v1/agents?select=*";
+            const key = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t";
 
             try {
-                const { data, error } = await supabaseClient.from('agents').select('*');
-
-                if (error) {
-                    message.style.color = "red";
-                    message.innerText = "Erreur (Vigile RLS) : " + error.message;
-                } else {
-                    message.style.color = "green";
-                    if (data.length === 0) {
-                        message.innerText = "Succès ! La connexion fonctionne, la table est vide.";
-                    } else {
-                        message.innerText = "Succès ! Il y a " + data.length + " agent(s).";
+                // On utilise fetch directement
+                const reponse = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': 'Bearer ' + key
                     }
+                });
+
+                // Si le serveur répond, on lit le message
+                const donnees = await reponse.json();
+                
+                if (reponse.ok) {
+                    message.style.color = "green";
+                    message.innerText = "Victoire ! Connexion réussie. L'API répond.";
+                } else {
+                    message.style.color = "red";
+                    message.innerText = "Le serveur a répondu, mais avec une erreur (C'est normal, c'est le vigile) : " + JSON.stringify(donnees);
                 }
-            } catch (e) {
+                
+            } catch (erreur) {
                 message.style.color = "red";
-                message.innerText = "Erreur inattendue : " + e.message;
+                message.innerText = "Échec de communication. Ton navigateur bloque l'accès à Supabase. Erreur : " + erreur.message;
             }
         }
     </script>
