@@ -1,1 +1,60 @@
-git clone https://x:art_v2_x_9b1de9e9e0ebd40b7c1a98d4cf43cdba00da2816@31b91e7f9954ad8aa334d46f012bd8ed.artifacts.cloudflare.net/git/lee-production/lee-pwa-depannage-cie-32a476166bb84ff7.git pwa-depannage-cie
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Dépannage CIE</title>
+</head>
+<body>
+    <h1>PWA Dépannage CIE</h1>
+    <p id="message" style="font-weight: bold; color: blue;">En attente du clic...</p>
+    <button onclick="chargerAgents()">Tester la connexion</button>
+
+    <script>
+        async function chargerAgents() {
+            const message = document.getElementById("message");
+            message.style.color = "blue";
+            message.innerText = "Connexion via le pont Cloudflare...";
+
+            const urlPontCloudflare = "https://pont-supabase.cortex052dran.workers.dev";
+            const urlFinale = urlPontCloudflare + "/rest/v1/agents?select=*";
+
+            try {
+                const reponse = await fetch(urlFinale, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                const texte = await reponse.text();
+
+                if (!reponse.ok) {
+                    message.style.color = "red";
+                    message.innerText = "Erreur " + reponse.status + " : " + texte;
+                    return;
+                }
+
+                let affichage = texte;
+                const contentType = reponse.headers.get("content-type") || "";
+                if (contentType.includes("application/json") && texte.trim().length > 0) {
+                    try {
+                        const json = JSON.parse(texte);
+                        affichage = JSON.stringify(json, null, 2);
+                    } catch (e) {
+                        // garde le texte brut
+                    }
+                }
+
+                message.style.color = "green";
+                message.innerText = "Victoire ! Réponse : " + affichage;
+
+            } catch (erreur) {
+                message.style.color = "red";
+                message.innerText = "Échec de communication. Erreur : " + erreur.message;
+            }
+        }
+    </script>
+</body>
+</html>
+Mise à jour pour D1
