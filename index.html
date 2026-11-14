@@ -7,32 +7,37 @@
 <body>
     <h1>PWA Dépannage CIE</h1>
     <p id="message" style="font-weight: bold; color: blue;">En attente du clic...</p>
-    <button onclick="testerConnexionDirecte()">Tester la connexion</button>
+    <button onclick="chargerAgents()">Tester la connexion</button>
 
     <script>
-        async function testerConnexionDirecte() {
+        async function chargerAgents() {
             const message = document.getElementById("message");
             message.style.color = "blue";
-            message.innerText = "Test de communication en cours...";
+            message.innerText = "Connexion via le pont Cloudflare...";
 
-            const key = "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t";
-            // On met la clé directement dans le lien pour éviter le blocage
-            const url = "https://sqcjycoddjbtvcgtdcaz.supabase.co/rest/v1/agents?select=*&apikey=" + key;
+            // 👇 REMPLACE ICI PAR L'URL DE TON WORKER CLOUDFLARE (ex: https://pont-supabase.xxx.workers.dev)
+            const urlPontCloudflare = "pont-supabase.cortex052dran.workers.dev/";
+            
+            // On ajoute le chemin vers la table agents
+            const urlFinale = urlPontCloudflare + "/rest/v1/agents?select=*";
 
             try {
-                const reponse = await fetch(url, {
-                    method: 'GET'
+                const reponse = await fetch(urlFinale, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': "sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t",
+                        'Authorization': "Bearer sb_publishable_FSV5BF_QkdnMDvunTVYP9Q_53d42z6t"
+                    }
                 });
 
                 const donnees = await reponse.json();
                 
                 if (reponse.ok) {
                     message.style.color = "green";
-                    message.innerText = "Victoire ! Connexion réussie. L'API répond.";
+                    message.innerText = "Victoire ! Le pont fonctionne. Table vide.";
                 } else {
                     message.style.color = "red";
-                    // Si c'est une erreur 401/403, le vigile RLS fait son travail !
-                    message.innerText = "Le serveur a répondu (Code " + reponse.status + ") : " + JSON.stringify(donnees);
+                    message.innerText = "Le pont a répondu (Code " + reponse.status + ") : " + JSON.stringify(donnees);
                 }
                 
             } catch (erreur) {
